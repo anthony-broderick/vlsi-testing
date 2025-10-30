@@ -1,4 +1,4 @@
-from menu import disply_menu, handle_selection
+from menu import display_menu, handle_selection
 
 def main():
     while True:
