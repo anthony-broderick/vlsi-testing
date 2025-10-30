@@ -1,3 +1,4 @@
+from netlist_parser import read_netlist
 
 def display_menu():
     print("""
@@ -12,8 +13,7 @@ def display_menu():
 
 def handle_selection(selection):
     if selection == '0':
-        print("You chose '0'\n")
-        #read_netlist()
+        read_netlist(filepath = input("Enter the path to the net-list file: ").strip())
     elif selection == '1':
         print("You chose '1'\n")
         #perform_fault_collapsing()
