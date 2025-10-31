@@ -13,6 +13,7 @@ def read_netlist(filepath: str):
     
     # clear any previous netlist data
     globals.reset_globals()
+    gate_number = 0
 
     # read and strip lines
     with open(filepath, "r") as file:
@@ -37,18 +38,16 @@ def read_netlist(filepath: str):
             else:
                 if len(tokens) == 4:
                     output, gate_type, input1, input2 = tokens
-                    globals.gates.append({
-                        "output": output,
-                        "gate_type": gate_type.lower(),
-                        "inputs": [input1, input2]
-                    })
+                    name = f"G{gate_number}"
+                    gate_obj = globals.Gate(name, output, gate_type.lower(), [input1, input2])
+                    gate_number += 1
+                    globals.gates.append(gate_obj)
                 elif len(tokens) == 3:
                     output, gate_type, input1 = tokens
-                    globals.gates.append({
-                        "output": output,
-                        "gate_type": gate_type.lower(),
-                        "inputs": [input1]
-                    })
+                    name = f"G{gate_number}"
+                    gate_obj = globals.Gate(name, output, gate_type.lower(), [input1])
+                    gate_number += 1
+                    globals.gates.append(gate_obj)
                 else:
                     print(f"Warning: Unrecognized line format: '{line}'")
 
@@ -57,7 +56,7 @@ def read_netlist(filepath: str):
     print(f"Primary Outputs: {globals.primary_outputs}")
     print("Gates:")
     for gate in globals.gates:
-        print(f"  {gate['output']} {gate['gate_type']} {gate['inputs']}")
+        print(f"  {gate.name}: {gate.output} = {gate.gate_type}({', '.join(gate.inputs)})   c={gate.c}, inv={gate.inv}")
 
 # test runner
 if __name__ == "__main__":
