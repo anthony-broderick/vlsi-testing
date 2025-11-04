@@ -1,5 +1,3 @@
-
-
 $                  The netlist of t5.10.ckt:
 $ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                        
 $ total number of lines in the netlist .............. 12
@@ -24,7 +22,7 @@ mgat                                                        $...Primary output
                                                                $...Primary output
 $
 $
-$                   Output           Type             Inputs…
+$                   Output           Type             Inputsï¿½
 $                - - - - - - - -     - - - - - - -      - - - - - - - - - 
                    fgat                 AND            agat       bgat
                    jgat                 NOR            fgat       cgat
