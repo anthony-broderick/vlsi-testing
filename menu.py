@@ -1,4 +1,5 @@
 from netlist_parser import read_netlist
+from fault_collapse import collapse_faults
 
 def display_menu():
     print("""
@@ -15,8 +16,7 @@ def handle_selection(selection):
     if selection == '0':
         read_netlist(filepath = input("Enter the path to the net-list file: ").strip())
     elif selection == '1':
-        print("You chose '1'\n")
-        #perform_fault_collapsing()
+        collapse_faults()
     elif selection == '2':
         print("You chose '2'\n")
         #list_fault_classes()

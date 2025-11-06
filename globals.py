@@ -4,11 +4,16 @@ primary_outputs = []
 gates = []
 
 class Gate:
-    def __init__(self, name: str, output: str, gate_type: str, inputs: list, c: int = 0, inv: int = 0):
+    def __init__(self, name: str, output: str, gate_type: str, inputs: list, c: int = 0, inv: int = 0, PI: bool = False):
         self.name = name
         self.output = output
         self.gate_type = gate_type
         self.inputs = inputs
+        self.PI = False
+        
+        for inp in self.inputs:
+            if inp in primary_inputs:
+                self.PI = True
 
         # set controlling and inverting values
         if gate_type == "nand" or gate_type == "not":
