@@ -12,29 +12,29 @@ def collapse_faults():
 
 def collapse_faults_at_gate(Gate):
     collapsed_faults = set() # use a set to avoid duplicates
-    
-    if Gate.gate_type == "nand":
-        # input s-a-0's equivalent to output s-a-1
-        # output s-a-0 dominates inputs s-a-1, remove output s-a-0
-        for inp in Gate.inputs:
-            collapsed_faults.add(f"{inp}: s-a-1")
-        collapsed_faults.add(f"{Gate.output}: s-a-1")
-    elif Gate.gate_type == "nor":
-        # input s-a-1's equivalent to output s-a-0
-        # output s-a-1 dominates inputs s-a-0, remove output s-a-1
-        for inp in Gate.inputs:
-            collapsed_faults.add(f"{inp}: s-a-0")
+
+    # NOT GATE
+    # inputs are functionally equivalent to the output inverted
+    # remove all input s-a-faults and keep output s-a-faults
+    if Gate.gate_type == "not":
         collapsed_faults.add(f"{Gate.output}: s-a-0")
-    elif Gate.gate_type == "and":
-        # input s-a-0's equivalent to output s-a-0
-        # output s-a-1 dominates inputs s-a-1, remove output s-a-1
-        for inp in Gate.inputs:
-            collapsed_faults.add(f"{inp}: s-a-1")
-        collapsed_faults.add(f"{Gate.output}: s-a-0")
-    else:   # or gate
-        # input s-a-1's equivalent to output s-a-1
-        # output s-a-0 dominates inputs s-a-0, remove output s-a-0
-        for inp in Gate.inputs:
-            collapsed_faults.add(f"{inp}: s-a-0")
         collapsed_faults.add(f"{Gate.output}: s-a-1")
+        return collapsed_faults
+
+    # FAULT EQUIVALENCE
+    # input s-a-(c) equivalent to output s-a-(c XOR i)
+    # remove both input s-a-(c)s and keep output s-a-(c XOR i)
+
+    # FAULT DOMINANCE
+    # output s-a-(c XNOR i) dominates input s-a-(c')s
+    # remove output s-a-(c XNOR i) and keep both input s-a-(c')s
+
+    # after removing output s-a-(c XNOR i) and both input s-a-(c)s, we have:
+    # input s-a-(c')s
+    # output s-a-(c XOR i)
+
+    for inp in Gate.inputs:
+        collapsed_faults.add(f"{inp}: s-a-{Gate.c ^ 1}")
+    for out in [Gate.output]:
+        collapsed_faults.add(f"{out}: s-a-{Gate.c ^ Gate.inv}")
     return collapsed_faults
