@@ -7,9 +7,6 @@ def read_netlist(filepath: str):
     if not os.path.isfile(filepath):
         print(f"Error: File '{filepath}' does not exist.")
         return None
-    if not filepath.endswith('.ckt'):
-        print(f"Error: Invalid file type. Must be a .ckt file.")
-        return None
     
     # clear any previous netlist data
     globals.reset_globals()

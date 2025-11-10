@@ -34,7 +34,7 @@ def collapse_faults_at_gate(Gate):
     # output s-a-(c XOR i)
 
     for inp in Gate.inputs:
-        collapsed_faults.add(f"{inp}: s-a-{Gate.c ^ 1}")
-    for out in [Gate.output]:
-        collapsed_faults.add(f"{out}: s-a-{Gate.c ^ Gate.inv}")
+        if inp in globals.primary_inputs:
+            collapsed_faults.add(f"{inp}: s-a-{Gate.c ^ 1}")
+    collapsed_faults.add(f"{Gate.output}: s-a-{Gate.c ^ Gate.inv}")
     return collapsed_faults

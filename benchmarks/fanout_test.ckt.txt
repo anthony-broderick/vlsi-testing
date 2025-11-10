@@ -1,0 +1,21 @@
+$ Example to test fanout
+$---------------------------------------------------
+$
+
+A                                  	$... primary input
+B                                    	$... primary input
+C                                    	$... primary input
+
+$
+$
+
+Z                                   	$... primary output
+Y                                       $... primary output
+
+$
+$
+$       Output  Type    Inputs...
+$       ------  ----    ---------
+        b2   	not    	B    
+        Y   	and     A	B
+        Z   	and    	b2    	C
