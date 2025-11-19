@@ -6,9 +6,7 @@ def collapse_faults():
         if gate.PI == False:
             continue
         collapsed_set |= collapse_faults_at_gate(gate)
-    print("Collapsed Faults:")
-    for fault in sorted(collapsed_set):
-        print(f" {fault}")
+    globals.fault_list = collapsed_set
 
 def collapse_faults_at_gate(Gate):
     collapsed_faults = set() # use a set to avoid duplicates

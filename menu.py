@@ -1,5 +1,7 @@
 from netlist_parser import read_netlist
 from fault_collapse import collapse_faults
+from podem import inject_fault, get_test_vector
+import globals
 
 def display_menu():
     print("""
@@ -7,7 +9,7 @@ def display_menu():
     [1] Perform fault collapsing
     [2] List fault classes
     [3] Simulate
-    [4] Generate tests (D-Algorithm)
+    [4] Generate tests (PODEM)
     [5] Exit
           """)
     return input("Select an option: ")
@@ -18,13 +20,21 @@ def handle_selection(selection):
     elif selection == '1':
         collapse_faults()
     elif selection == '2':
-        print("You chose '2'\n")
-        #list_fault_classes()
+        print("Fault List:")
+        for fault in sorted(globals.fault_list):
+            print(f"{fault}")
     elif selection == '3':
         print("You chose '3'\n")
         #simulate()
     elif selection == '4':
-        print("You chose '4'\n")
+        fault_line = input("Fault_line: ")
+        fault_value = input("Fault_value: ")
+        result = inject_fault(fault_line, fault_value)
+        if result == "SUCCESS":
+            print("Test generated successfully.")
+            get_test_vector()
+        else:
+            print("Failed to generate test.")
         #generate_tests()
     elif selection == '5':
         print("You chose '5'\n")
