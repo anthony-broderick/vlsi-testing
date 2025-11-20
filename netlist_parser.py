@@ -33,18 +33,14 @@ def read_netlist(filepath: str):
             
             # gates
             else:
-                if len(tokens) == 4:
-                    output, gate_type, input1, input2 = tokens
+                if len(tokens) >= 3:
+                    output = tokens[0]
+                    gate_type = tokens[1]
+                    inputs = tokens[2:]
                     name = f"G{gate_number}"
-                    gate_obj = globals.Gate(name, output, gate_type.lower(), [input1, input2])
+                    gate_obj = globals.Gate(name, output, gate_type.lower(), inputs)
                     gate_number += 1
-                    globals.gates.append(gate_obj)
-                elif len(tokens) == 3:
-                    output, gate_type, input1 = tokens
-                    name = f"G{gate_number}"
-                    gate_obj = globals.Gate(name, output, gate_type.lower(), [input1])
-                    gate_number += 1
-                    globals.gates.append(gate_obj)
+                    globals.gates.append(gate_obj) 
                 else:
                     print(f"Warning: Unrecognized line format: '{line}'")
 
