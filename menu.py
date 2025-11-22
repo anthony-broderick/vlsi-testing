@@ -1,6 +1,7 @@
 from netlist_parser import read_netlist
 from fault_collapse import collapse_faults
 from podem import inject_fault, get_test_vector
+from simulate import simulate
 import globals
 
 def display_menu():
@@ -25,7 +26,7 @@ def handle_selection(selection):
             print(f"{fault}")
     elif selection == '3':
         print("You chose '3'\n")
-        #simulate()
+        simulate()
     elif selection == '4':
         fault_line = input("Fault_line: ")
         fault_value = input("Fault_value: ")
