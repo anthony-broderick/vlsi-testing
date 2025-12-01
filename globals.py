@@ -21,7 +21,7 @@ class Gate:
             wire_values[inp] = 'X' # initialize input wire value
             if inp in input_wires:
                 if inp not in duplicate_wires:
-                    duplicate_wires[inp] = 2 # first duplicate means there are at least 2 branches to be considered fanout
+                    duplicate_wires[inp] = 1 # first duplicate means there are at least 2 branches to be considered fanout
                 else:
                     duplicate_wires[inp] += 1
             input_wires.append(inp)

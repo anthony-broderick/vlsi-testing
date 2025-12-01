@@ -1,9 +1,28 @@
 import os
 import globals
 
-#def make_fanouts():
-    # create fanouts
-    
+def make_fanouts():
+    for wire, fanout_number in globals.duplicate_wires.items():
+        fanout_number += 1 # account for original wire
+        input_wire = wire
+        output_wires = [f"{wire}_fan{i}" for i in range(fanout_number)] # rename fanout branches
+
+        branch_index = 0 # index to track which fanout branch to use
+        # Update each gate that uses this wire
+        for gate in globals.gates:
+            if wire in gate.inputs:
+                # Replace only the first occurrence
+                gate.inputs[gate.inputs.index(wire)] = output_wires[branch_index]
+
+                branch_index += 1
+                if branch_index >= fanout_number:
+                    break
+        # create fanout gate        
+        globals.gates.append(
+            globals.Gate(f"Fanout_{wire}", output_wires, "fanout", input_wire)
+        )
+
+
     
 
 def read_netlist(filepath: str):
@@ -49,7 +68,7 @@ def read_netlist(filepath: str):
                 else:
                     print(f"Warning: Unrecognized line format: '{line}'")
 
-    #make_fanouts()
+    make_fanouts()
 
     # display for testing
     print(f"Primary Inputs: {globals.primary_inputs}")
@@ -57,7 +76,10 @@ def read_netlist(filepath: str):
     print(f"Fanouts: {globals.duplicate_wires}")
     print("Gates:")
     for gate in globals.gates:
-        print(f"  {gate.name}: {gate.output} = {gate.gate_type}({', '.join(gate.inputs)})   c={gate.c}, inv={gate.inv}")
+        if gate.gate_type == "fanout":
+            print(f"  {gate.name}: {gate.output}")
+        else:
+            print(f"  {gate.name}: {gate.output} = {gate.gate_type}({', '.join(gate.inputs)})   c={gate.c}, inv={gate.inv}")
 
 # test runner
 if __name__ == "__main__":
