@@ -17,6 +17,10 @@ class Gate:
         
         for out in self.output:
             wire_values[out] = 'X'  # initialize output wire value
+
+            # add output s-a-faults
+            fault_list.add(f"{out}: s-a-0")
+            fault_list.add(f"{out}: s-a-1")
         for inp in self.inputs:
             wire_values[inp] = 'X' # initialize input wire value
             if inp in input_wires:
@@ -32,9 +36,6 @@ class Gate:
             if inp in primary_inputs:
                 self.PI = True
 
-        # add output s-a-faults
-        fault_list.add(f"{self.output}: s-a-0")
-        fault_list.add(f"{self.output}: s-a-1")
 
         # set controlling and inverting values
         if gate_type == "nand" or gate_type == "not":
