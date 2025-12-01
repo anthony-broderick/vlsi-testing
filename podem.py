@@ -3,15 +3,31 @@ import globals
 # main functions: PODEM, Objective, Backtrace, Imply
 # all functions above # line will be abstracted to other files
 
+# no longer used
 def inject_fault(fault_line, fault_value):
+    if fault_line not in globals.wire_values:
+        print("inject fault: invalid fault line")
+        return "FAILURE"
     if fault_value == '0': 
-        globals.wire_values[fault_line] = 'D'  # s-a-0 fault
+        globals.wire_values[fault_line] = '1'  # s-a-0 fault
     elif fault_value == '1':
-        globals.wire_values[fault_line] = "D'"  # s-a-1 fault
+        globals.wire_values[fault_line] = "0"  # s-a-1 fault
     else:
         print("inject_fault: Invalid fault value.")
         return "FAILURE"
+    set_initial_gate_fault(fault_line, fault_value)
     return podem(fault_line, fault_value)
+
+# no longer used
+def set_initial_gate_fault(fault_line, fault_value):
+    for gate in globals.gates:
+        for inp in gate.inputs:
+            if inp == fault_line:
+                if fault_value == gate.inv:
+                    value = "D"
+                else:
+                    value = "D'"
+                globals.wire_values[gate.output] = value 
 
 def error_at_PO():
     # Check if there is an error at any primary output
@@ -46,24 +62,40 @@ def evaluate_gate(gate):
     if gate.gate_type == "not":
         return input_values[0] == '1' and '0' or input_values[0] == '0' and '1' or 'X'
     
-    if gate.c in [0, 1]:  
-        c_str = str(gate.c)
-        if c_str in input_values:
-            result = c_str
-        elif 'X' in input_values:
-            result = 'X'
-        else:
-            # all non-controlling values
-            result = '1' if gate.c == 0 else '0'
+    c = str(gate.c)
+    c_complement = '1' if gate.c == 0 else '0'
+
+    # output is control value if input is control value
+    if c in input_values:
+        out = c
     else:
-        result = 'X'  # unknown controlling value
+        if 'X' in input_values:
+            out = 'X'
+        else:
+            # all inputs non-controlling means output is c_complement
+            out = c_complement
     
-    result = handle_d_values(gate, input_values, result)
+    # handle d values
+    d_present = 'D' in input_values
+    dc_present = "D'" in input_values
+
+    if d_present or dc_present:
+        # D can't propagate with controlling values present
+        if c in input_values:
+            pass # output stays c
+        else:
+            # D passes through
+            if d_present and not dc_present:
+                out = 'D'
+            elif dc_present and not d_present:
+                out = "D'"
+            else:
+                out = 'X'
 
     if gate.inv == 1:
-        result = invert_value(result)
+        out = invert_value(out)
 
-    return result  # unknown if gate type is unrecognized
+    return out
 
 def invert_value(value):
     if value == '1':
@@ -76,24 +108,7 @@ def invert_value(value):
         return 'D'
     else:
         return 'X'
-    
-def handle_d_values(gate, input_values, result):
-    if 'D' in input_values or "D'" in input_values:
-        # check if all other inputs are non-controlling
-        c_str = str(gate.c) if gate.c in [0,1] else None
 
-        d_count = input_values.count('D') + input_values.count("D'")
-
-        if c_str and c_str in input_values:
-            return result
-        
-        # propagate D or D'
-        if d_count == 1:
-            if 'D' in input_values:
-                return 'D'
-            else:
-                return "D'"
-    return result
 
 def get_d_frontier():
     d_frontier = []
@@ -133,10 +148,14 @@ def podem(fault_line, fault_value):
     if error_at_PO():
         return "SUCCESS"
 
+    """
     if not test_possible():
+        print("Returning failure")
         return "FAILURE"
-    
+    """
+
     # get objective
+    # returns fault_line and fault_value complement
     k, vk = objective(fault_line, fault_value)
     if k is None:
         return "FAILURE"
@@ -161,10 +180,13 @@ def podem(fault_line, fault_value):
     return "FAILURE" # D-frontier becomes empty
 
 def objective(fault_line, fault_value):
-    # activate fault for unknown values
+    print(f"objective: objective called with {fault_line} s-a-{fault_value}")
+
+    # target fault is activated if 'X'
     if globals.wire_values[fault_line] == 'X':
         # complement s-a-value to activate fault
         target_value = '1' if fault_value == '0' else '0'
+        globals.wire_values[fault_line] = target_value
         return (fault_line, target_value)
     
     # find gate in D-frontier to propagate fault
@@ -173,12 +195,14 @@ def objective(fault_line, fault_value):
     if not d_frontier:
         return (None, None)
     
+    # select a gate (gate) from the D-frontier
     gate = d_frontier[0]  # select first gate in D-frontier
     
+    # select an input (inp) of (gate) with value 'X'
+    # return complement of controlling value of (gate)
     for inp in gate.inputs:
         if globals.wire_values[inp] == 'X':
-            c_complement = gate.c ^ 1 # controlling value complement
-            str(c_complement)
+            c_complement = '1' if gate.c == 0 else '0'
             return (inp, c_complement)
     
     return (None, None)
