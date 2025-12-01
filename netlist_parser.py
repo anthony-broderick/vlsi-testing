@@ -19,7 +19,7 @@ def make_fanouts():
                     break
         # create fanout gate        
         globals.gates.append(
-            globals.Gate(f"Fanout_{wire}", output_wires, "fanout", input_wire)
+            globals.Gate(f"Fanout_{wire}", output_wires, "fanout", [input_wire])
         )
 
 
@@ -58,7 +58,7 @@ def read_netlist(filepath: str):
             # gates
             else:
                 if len(tokens) >= 3:
-                    output = tokens[0]
+                    output = [tokens[0]]
                     gate_type = tokens[1]
                     inputs = tokens[2:]
                     name = f"G{gate_number}"
@@ -74,6 +74,7 @@ def read_netlist(filepath: str):
     print(f"Primary Inputs: {globals.primary_inputs}")
     print(f"Primary Outputs: {globals.primary_outputs}")
     print(f"Fanouts: {globals.duplicate_wires}")
+    print(f"Wire Values: {globals.wire_values}")
     print("Gates:")
     for gate in globals.gates:
         if gate.gate_type == "fanout":
