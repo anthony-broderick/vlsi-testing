@@ -20,12 +20,12 @@ $       Output  Type    Inputs...
 $       ------  ----    ---------
         g   	nand    a	b	c    
         h   	nand    a	d'
-	d'	not	d
-	i	nand	d	g
-	j	nand	b	e'
-	e'	not	e
-	k	nand	e	g
-	l	nand	c	f'
-	f'	not	f
-	m	nand	f	g
-	n	nand	h	i	j	k	l	m
+		d'		not		d
+		i		nand	d	g
+		j		nand	b	e'
+		e'		not		e
+		k		nand	e	g
+		l		nand	c	f'
+		f'		not		f
+		m		nand	f	g
+		n		nand	h	i	j	k	l	m

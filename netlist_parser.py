@@ -1,6 +1,11 @@
 import os
 import globals
 
+#def make_fanouts():
+    # create fanouts
+    
+    
+
 def read_netlist(filepath: str):
     # validate file
     # not yet implemented
@@ -44,9 +49,12 @@ def read_netlist(filepath: str):
                 else:
                     print(f"Warning: Unrecognized line format: '{line}'")
 
+    #make_fanouts()
+
     # display for testing
     print(f"Primary Inputs: {globals.primary_inputs}")
     print(f"Primary Outputs: {globals.primary_outputs}")
+    print(f"Fanouts: {globals.duplicate_wires}")
     print("Gates:")
     for gate in globals.gates:
         print(f"  {gate.name}: {gate.output} = {gate.gate_type}({', '.join(gate.inputs)})   c={gate.c}, inv={gate.inv}")
