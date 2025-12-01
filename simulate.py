@@ -68,12 +68,13 @@ def simulate():
 		for gate in globals.gates:
 			# gate.output may be a list (fanout) or a single value; normalize to list
 			outputs = gate.output if isinstance(gate.output, list) else [gate.output]
-			# skip overwriting any outputs that have an injected fault
-			if any(out in applied_fault_lines for out in outputs):
-				continue
+			# evaluate gate once; only update outputs that do not have injected faults
 			new = evaluate_gate(gate)
 			# assign new value to each output wire and mark changed if any updated
 			for out in outputs:
+				# don't overwrite wires with explicitly injected faults
+				if out in applied_fault_lines:
+					continue
 				old = globals.wire_values.get(out, 'X')
 				if new != old:
 					globals.wire_values[out] = new
