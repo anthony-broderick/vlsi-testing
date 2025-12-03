@@ -1,6 +1,6 @@
 from netlist_parser import read_netlist
 from fault_collapse import collapse_faults
-from podem import inject_fault, get_test_vector
+from podem import podem, print_test_vector, get_test_vector
 from simulate import simulate
 import globals
 
@@ -30,12 +30,15 @@ def handle_selection(selection):
     elif selection == '4':
         fault_line = input("Fault_line: ")
         fault_value = input("Fault_value: ")
-        result = inject_fault(fault_line, fault_value)
+        result = podem(fault_line, fault_value)
         if result == "SUCCESS":
             print("Test generated successfully.")
-            get_test_vector()
+            tv = get_test_vector()
+            print_test_vector(tv)
+            #get_test_vector()
         else:
             print("Failed to generate test.")
+            
         #generate_tests()
     elif selection == '5':
         print("You chose '5'\n")
