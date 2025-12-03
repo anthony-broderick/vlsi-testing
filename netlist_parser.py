@@ -45,13 +45,14 @@ def read_netlist(filepath: str):
         
             tokens = line.split()
 
+            lower_line = line.lower()
             # primary inputs
-            if "$... primary input" in line or "$ ... primary input" in line:
+            if "primary input" in lower_line:
                 wire_name = tokens[0]
                 globals.primary_inputs.append(wire_name)
 
             # primary outputs
-            elif "$... primary output" in line or "$ ... primary output" in line:
+            elif "primary output" in lower_line:
                 wire_name = tokens[0]
                 globals.primary_outputs.append(wire_name)
             
