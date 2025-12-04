@@ -1,6 +1,22 @@
 import globals
-from podem import evaluate_gate
 
+# 5-value logic constants
+X = 'X'
+ZERO = '0'
+ONE = '1'
+D = 'D'
+DB = "D'"
+
+def invert_value(val):
+    if val == ONE:
+        return ZERO
+    if val == ZERO:
+        return ONE
+    if val == D:
+        return DB
+    if val == DB:
+        return D
+    return X
 
 def simulate():
 	"""Collect PI values and faults from the user, run a simulation
@@ -93,3 +109,51 @@ def simulate():
 if __name__ == '__main__':
 	simulate()
 
+def evaluate_gate(gate):
+    # Returns new 5-valued logic for gate.output[0] based on gate.inputs
+    in_vals = [globals.wire_values.get(i, X) for i in gate.inputs]
+
+    # NOT gate
+    if gate.gate_type == 'not':
+        vin = in_vals[0]
+        if vin in (ZERO, ONE):
+            return ONE if vin == ZERO else ZERO
+        if vin == D:
+            return DB if gate.inv == 0 else invert_value(DB)
+        if vin == DB:
+            return D if gate.inv == 0 else invert_value(D)
+        return X
+
+    # For multi-input gates (AND/OR-like with control value gate.c)
+    control = str(gate.c)
+    non_control = '1' if gate.c == 0 else '0'
+
+    # If any input equals control -> output is control
+    if control in in_vals:
+        out = control
+    else:
+        # no control value present
+        if X in in_vals:
+            out = X
+        else:
+            out = non_control
+
+    # Handle D / D' propagation
+    has_d = D in in_vals
+    has_db = DB in in_vals
+    if has_d or has_db:
+        if control in in_vals:
+            out = control
+        else:
+            if has_d and not has_db:
+                out = D
+            elif has_db and not has_d:
+                out = DB
+            else:
+                out = X
+
+    # Account for gate inversion
+    if getattr(gate, 'inv', 0) == 1:
+        out = invert_value(out)
+
+    return out
