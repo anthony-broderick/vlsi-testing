@@ -7,6 +7,12 @@ ONE = '1'
 D = 'D'
 DB = "D'"
 
+# test vector
+test_vector = {}
+
+# print table
+fault_rows = []
+
 def invert_value(val):
     if val == ONE:
         return ZERO
@@ -17,97 +23,6 @@ def invert_value(val):
     if val == DB:
         return D
     return X
-
-def simulate():
-	"""Collect PI values and faults from the user, run a simulation
-	across the whole circuit and print resulting wire values.
-	"""
-	# ensure there is something to simulate
-	if not globals.gates:
-		print("No gates loaded in globals.gates. Parse a netlist first.")
-		return
-
-	# collect primary input values
-	print("Primary inputs:")
-	for pi in globals.primary_inputs:
-		while True:
-			val = input(f"  Enter value for {pi} (0/1/X): ").strip().upper()
-			if val in ('0', '1', 'X'):
-				globals.wire_values[pi] = val
-				break
-			print("    Invalid value — enter 0, 1, or X.")
-
-	# collect faults to inject
-	# show all known wires so user can pick fault targets
-	print("\nAvailable wires in circuit (can inject faults on any):")
-	wires = sorted(globals.wire_values.keys())
-	if wires:
-		print("  " + ", ".join(wires))
-	else:
-		print("  (no wires detected)")
-
-	raw_faults = input("\nEnter faults to inject (comma-separated, e.g. 'a: s-a-0, b: s-a-0'), or leave blank: ").strip()
-	applied_fault_lines = set()
-	if raw_faults:
-		parts = [p.strip() for p in raw_faults.split(',') if p.strip()]
-		for p in parts:
-			# accept formats like "wire: s-a-0" or "wire s-a-0" or "wire:s-a-0"
-			token = p.replace(':', ' ').split()
-			if len(token) >= 2:
-				line = token[0]
-				sa = token[1]
-				if sa.endswith('0'):
-					# represent s-a-0 as D (good=1, faulty=0)
-					if line in globals.wire_values:
-						globals.wire_values[line] = 'D'
-						applied_fault_lines.add(line)
-					else:
-						print(f"Warning: fault line {line} not found in circuit.")
-				elif sa.endswith('1'):
-					# represent s-a-1 as D' (good=0, faulty=1)
-					if line in globals.wire_values:
-						globals.wire_values[line] = "D'"
-						applied_fault_lines.add(line)
-					else:
-						print(f"Warning: fault line {line} not found in circuit.")
-				else:
-					print(f"Warning: couldn't parse stuck value in '{p}'.")
-			else:
-				print(f"Warning: couldn't parse fault '{p}'.")
-
-	# iterative simulation
-	changed = True
-	iteration = 0
-	while changed:
-		changed = False
-		iteration += 1
-		for gate in globals.gates:
-			# gate.output may be a list (fanout) or a single value; normalize to list
-			outputs = gate.output if isinstance(gate.output, list) else [gate.output]
-			# evaluate gate once; only update outputs that do not have injected faults
-			new = evaluate_gate(gate)
-			# assign new value to each output wire and mark changed if any updated
-			for out in outputs:
-				# don't overwrite wires with explicitly injected faults
-				if out in applied_fault_lines:
-					continue
-				old = globals.wire_values.get(out, 'X')
-				if new != old:
-					globals.wire_values[out] = new
-					changed = True
-
-	# print summary of wire values
-	print('\nSimulation complete. Wire values:')
-	for wire in sorted(globals.wire_values.keys()):
-		print(f"  {wire}: {globals.wire_values[wire]}")
-
-	print('\nPrimary outputs:')
-	for po in globals.primary_outputs:
-		print(f"  {po}: {globals.wire_values.get(po, 'X')}")
-
-
-if __name__ == '__main__':
-	simulate()
 
 def evaluate_gate(gate):
     # Returns new 5-valued logic for gate.output[0] based on gate.inputs
@@ -157,3 +72,176 @@ def evaluate_gate(gate):
         out = invert_value(out)
 
     return out
+
+def get_test_vector():
+	# collect test vector
+	print("Primary inputs:")
+	global test_vector
+	for pi in globals.primary_inputs:
+		while True:
+			val = input(f"  Enter value for {pi} (0/1/X): ").strip().upper()
+			if val in ('0', '1', 'X'):
+				test_vector[pi] = val
+				break
+			print("    Invalid value — enter 0, 1, or X.")
+
+	# print all wires user can choose from
+	print("\nAvailable wires in circuit (can inject faults on any):")
+	wires = sorted(globals.wire_values.keys())
+	if wires:
+		print("  " + ", ".join(wires))
+	else:
+		print("  (no wires detected)")
+
+	# reset print table
+	global fault_rows
+	fault_rows = []
+
+	# call simulate for each stuck at fault listed
+	raw_faults = input("\nEnter faults to inject (comma-separated, e.g. 'a: s-a-0, b: s-a-0'), or leave blank: ").strip()
+	sa0_faults = {}
+	sa1_faults = {}
+	if raw_faults:
+		parts = [p.strip() for p in raw_faults.split(',') if p.strip()]
+		for p in parts:
+			# accept formats like "wire: s-a-0" or "wire s-a-0" or "wire:s-a-0"
+			token = p.replace(':', ' ').split()
+			if len(token) >= 2:
+				line = token[0]
+				sa = token[1]
+				if sa.endswith('0'):
+					# represent s-a-0 as D (good=1, faulty=0)
+					if line in globals.wire_values:
+						sa0_faults[line] = 'D'
+					else:
+						print(f"Warning: fault line {line} not found in circuit.")
+				elif sa.endswith('1'):
+					# represent s-a-1 as D' (good=0, faulty=1)
+					if line in globals.wire_values:
+						sa1_faults[line] = "D'"
+					else:
+						print(f"Warning: fault line {line} not found in circuit.")
+				else:
+					print(f"Warning: couldn't parse stuck value in '{p}'.")
+			else:
+				print(f"Warning: couldn't parse fault '{p}'.")
+
+	# call simulate for each fault entered
+	for line, val in sa0_faults.items():
+		simulate(line, val)
+	for line, val in sa1_faults.items():
+		simulate(line, val)
+
+	if sa0_faults or sa1_faults:
+		print_fault_table()
+	else:
+		simulate_no_faults()
+
+def simulate_no_faults():
+	globals.reset_wire_values()
+	for pi in globals.primary_inputs:
+		globals.wire_values[pi] = test_vector.get(pi, 'X')
+
+	# iterative simulation
+	changed = True
+	iteration = 0
+	while changed:
+		changed = False
+		iteration += 1
+		for gate in globals.gates:
+			# gate.output may be a list (fanout) or a single value; normalize to list
+			outputs = gate.output if isinstance(gate.output, list) else [gate.output]
+			# evaluate gate once; only update outputs that do not have injected faults
+			new = evaluate_gate(gate)
+			# assign new value to each output wire and mark changed if any updated
+			for out in outputs:
+				old = globals.wire_values.get(out, 'X')
+				if new != old:
+					globals.wire_values[out] = new
+					changed = True
+	print("")
+	for po in globals.primary_outputs:
+		val = globals.wire_values.get(po, 'X')
+		print(f"{po}: {val}")
+    
+
+def simulate(fault_line, fault_value):
+	globals.reset_wire_values()
+	for pi in globals.primary_inputs:
+		globals.wire_values[pi] = test_vector.get(pi, 'X')
+	globals.wire_values[fault_line] = fault_value
+
+	# iterative simulation
+	changed = True
+	iteration = 0
+	while changed:
+		changed = False
+		iteration += 1
+		for gate in globals.gates:
+			# gate.output may be a list (fanout) or a single value; normalize to list
+			outputs = gate.output if isinstance(gate.output, list) else [gate.output]
+			# evaluate gate once; only update outputs that do not have injected faults
+			new = evaluate_gate(gate)
+			# assign new value to each output wire and mark changed if any updated
+			for out in outputs:
+				# don't overwrite wires with explicitly injected faults
+				if out == fault_line:
+					continue
+				old = globals.wire_values.get(out, 'X')
+				if new != old:
+					globals.wire_values[out] = new
+					changed = True
+	# collect results for table
+	add_fault_result(fault_line, fault_value)
+
+def add_fault_result(fault_line, fault_value):
+    """
+    Adds a row to the fault result table.
+    Uses the current globals.wire_values for each PO.
+    """
+    row = [
+        fault_line,
+        f"s-a-{'0' if fault_value == D else '1'}",
+    ]
+    
+    # Add each primary output value
+    for po in globals.primary_outputs:
+        val = globals.wire_values.get(po, 'X')
+        row.append(val)
+    
+    fault_rows.append(row)
+
+
+def print_fault_table():
+	"""Prints the accumulated table with multiple rows."""
+	if not fault_rows:
+		print("No fault results to display.")
+		return
+
+	# Build header
+	headers = ["fault line", "fault value"] + globals.primary_outputs
+
+	# Compute column widths
+	# Width = max(header width, max cell width in that column) + padding
+	num_cols = len(headers)
+	col_widths = [len(h) for h in headers]
+
+	for row in fault_rows:
+		for i in range(num_cols):
+			col_widths[i] = max(col_widths[i], len(str(row[i])))
+
+	col_widths = [w + 2 for w in col_widths]  # add padding
+
+	# Formatting helpers
+	def fmt_row(row):
+		return "".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row))
+
+	# Print header
+	print("")
+	print(fmt_row(headers))
+	print("".join("-" * w for w in col_widths))
+
+	# Print each saved row
+	for row in fault_rows:
+		print(fmt_row(row))
+

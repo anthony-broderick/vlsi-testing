@@ -1,7 +1,7 @@
 from netlist_parser import read_netlist
 from fault_collapse import collapse_faults
 from podem import PODEM
-from simulate import simulate
+from simulate import simulate, get_test_vector
 import globals
 
 def display_menu():
@@ -35,7 +35,8 @@ def handle_selection(selection):
         if not globals.gates:
             print("No gates loaded. Enter netlist with [0] first.")
             return
-        simulate()
+        get_test_vector()
+        #simulate()
     elif selection == '4':
         if not globals.gates:
             print("No gates loaded. Enter netlist with [0] first.")
@@ -44,7 +45,7 @@ def handle_selection(selection):
         test_vector_format = " ".join([pi for pi in globals.primary_inputs])
         print(f"Test Vector Format: {test_vector_format}")
         # print test vector for each fault
-        for wire in globals.wire_values:
+        for wire in sorted(globals.wire_values):
             for val in ['0', '1']:
                 globals.reset_wire_values()
                 globals.target_line = wire
