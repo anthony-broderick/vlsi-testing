@@ -40,6 +40,10 @@ def handle_selection(selection):
         if not globals.gates:
             print("No gates loaded. Enter netlist with [0] first.")
             return
+        # print test vector format
+        test_vector_format = " ".join([pi for pi in globals.primary_inputs])
+        print(f"Test Vector Format: {test_vector_format}")
+        # print test vector for each fault
         for wire in globals.wire_values:
             for val in ['0', '1']:
                 globals.reset_wire_values()
