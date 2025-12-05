@@ -29,36 +29,30 @@ def PODEM():
     # find necessary input to propagate fault
     k, vk = Objective() 
     if k is None:
-        print("No Objective found, test not possible.")
         return 'FAILURE'
 
-    print(f"Calling backtrace on line {k} for value {vk}")
     # using input from Objective, backtrace to PI (does not change any values)
     j, vj = Backtrace(k, vk)
     if j is None:
         return 'FAILURE'
 
-    print(f"Calling imply on PI {j} for value {vj}")
     # from PI, keep evaluating gate output until its no longer changing outputs
     Imply(j, vj)
 
     if PODEM() == 'SUCCESS': return 'SUCCESS'
 
-    print(f"Reversing decision on PI {j} to value {invert_value(vj)}")
     # reverse decision
     vj_complement = invert_value(vj)
     Imply(j, vj_complement) 
 
     if PODEM() == 'SUCCESS': return 'SUCCESS'
 
-    print(f"Reversing decision on PI {j} to 'X'")
     # reverse j to 'X'
     Imply(j, X)
 
     return 'FAILURE'
 
 def Objective():
-    print(f"fault line: {globals.target_line}, fault value: {globals.fault_value}")
     if globals.wire_values[globals.target_line] == 'X':
         if globals.fault_value == '1':
             return (globals.target_line, DB)
@@ -66,19 +60,16 @@ def Objective():
             return (globals.target_line, D)
     
     D_frontier = get_D_frontier()
-    print(f"D-frontier gates: {[gate.name for gate in D_frontier]}")
 
     if D_frontier: # D-frontier not empty
 
         gate = D_frontier[-1] # select last gate
-        print(f"Selected gate {gate.name} from D-frontier with inputs {gate.inputs} and gate.c = {gate.c}")
         for inp in gate.inputs:
             if globals.wire_values[inp] == 'X':
                 if gate.c == 0:
                     complement = ONE
                 else:
                     complement = ZERO
-                print(f"complement: {complement}")
                 return (inp, complement)
     return (None, None)
 
@@ -87,6 +78,10 @@ def Backtrace(k, complement):
     while k not in globals.primary_inputs: # k is not PI
         for gate in globals.gates:
             if k in gate.output:
+                # handle non PI target_fault
+                if k == globals.target_line:
+                    globals.wire_values[k] = D if globals.fault_value == '1' else DB
+                    v = ONE if globals.fault_value == '0' else ZERO
                 for j in gate.inputs:
                     if globals.wire_values[j] == 'X':
                         #v = v ^ gate.inv
@@ -98,7 +93,6 @@ def Backtrace(k, complement):
 
 def Imply(j,vj): # first call is a PI line (j) and needed value (vj)
     globals.wire_values[j] = vj # assigning PI to a value
-    print(f"Set PI {j} to value {vj}")
 
     # evaluating gates (assigning outputs) until output does not change
     changed = True
@@ -107,23 +101,26 @@ def Imply(j,vj): # first call is a PI line (j) and needed value (vj)
         for gate in globals.gates:
             if gate.gate_type == 'fanout':
                 for out in gate.output:
+                    # handle target fault on fanout branch
+                    if out == globals.target_line:
+                        continue
                     old = globals.wire_values.get(out, X)
                     new = globals.wire_values[gate.inputs[0]]
                     if new != old:
-                        print(f"{gate.name} output {out} changing from {old} to {new}")
                         globals.wire_values[out] = new
                         changed = True
             else:
+                # handle target fault on gate output
+                if gate.output[0] == globals.target_line:
+                    continue
                 old = globals.wire_values.get(gate.output[0], X)
                 new = evaluate_gate(gate)
-                # print(f"new: {new}, old: {old}")
                 if new != old:
-                    print(f"{gate.name} output {gate.output[0]} changing from {old} to {new}")
                     globals.wire_values[gate.output[0]] = new
                     changed = True
 
 def evaluate_gate(gate):
-    # Returns new 5-valued logic for gate.output[0] based on gate.inputs
+    # returns new 5-valued logic for gate.output[0] based on gate.inputs
     in_vals = [globals.wire_values.get(i, X) for i in gate.inputs]
 
     # NOT gate
@@ -152,14 +149,14 @@ def evaluate_gate(gate):
         out = X
 
 
-    # Account for gate inversion
+    # account for gate inversion
     if gate.inv == 1:
         out = invert_value(out)
 
     return out
 
 def error_at_PO():
-    # True if any primary output has D or D'
+    # true if any primary output has D or D'
     for po in globals.primary_outputs:
         val = globals.wire_values.get(po, X)
         if val == D or val == DB:
@@ -169,7 +166,6 @@ def error_at_PO():
 def test_not_possible():
     globals.recursion_depth += 1
     if globals.recursion_depth > globals.max_recursion_depth:
-        print("Max recursion depth reached, test not possible.")
         return True
 
 
