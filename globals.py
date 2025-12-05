@@ -6,6 +6,11 @@ wire_values = {}
 input_wires = []
 duplicate_wires = {}
 fault_list = set ()
+target_line = ""
+fault_value = ""
+max_recursion_depth = 50
+recursion_depth = 0
+
 
 class Gate:
     def __init__(self, name: str, output: list, gate_type: str, inputs: list, c: int = 0, inv: int = 0, PI: bool = False):
@@ -47,11 +52,20 @@ class Gate:
         elif gate_type == "or":
             self.c = 1
             self.inv = 0
+        elif gate_type == "and":
+            self.c = 0
+            self.inv = 0
         else:
             self.c = c
             self.inv = inv
 
 # faults
+def reset_wire_values():
+    global wire_values
+    for wire in wire_values:
+        wire_values[wire] = 'X'
+    global recursion_depth 
+    recursion_depth = 0
 
 # reset for new netlist
 def reset_globals():

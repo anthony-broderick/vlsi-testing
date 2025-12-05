@@ -1,6 +1,6 @@
 from netlist_parser import read_netlist
 from fault_collapse import collapse_faults
-from podem import podem, print_test_vector, get_test_vector
+from podem import PODEM
 from simulate import simulate
 import globals
 
@@ -28,14 +28,29 @@ def handle_selection(selection):
         print("You chose '3'\n")
         simulate()
     elif selection == '4':
-        fault_line = input("Fault_line: ")
+        globals.reset_wire_values()
+        target_line = input("Fault_line: ")
         fault_value = input("Fault_value: ")
-        result = podem(fault_line, fault_value)
+        if target_line not in globals.wire_values:
+            print(f"Error: Wire '{target_line}' not found in the circuit.")
+            return
+        elif fault_value not in ['0', '1']:
+            print("Error: Fault value must be '0' or '1'.")
+            return
+        else:
+            globals.target_line = target_line
+            globals.fault_value = fault_value
+
+        result = PODEM()
         if result == "SUCCESS":
             print("Test generated successfully.")
-            tv = get_test_vector()
-            print_test_vector(tv)
-            #get_test_vector()
+            print(f"All wire values: {globals.wire_values}")
+            for pi in globals.primary_inputs:
+                if globals.wire_values[pi] == 'D':
+                    globals.wire_values[pi] = '1'
+                elif globals.wire_values[pi] == "D'":
+                    globals.wire_values[pi] = '0'
+                print(f"{pi}: {globals.wire_values[pi]}")
         else:
             print("Failed to generate test.")
             
