@@ -30,7 +30,7 @@ def PODEM():
 
     # set intial fault line on first run
     # find necessary input to propagate fault
-    k, vk = Objective(status) 
+    k, vk = Objective() 
     if k is None:
         return 'FAILURE'
 
@@ -55,7 +55,7 @@ def PODEM():
 
     return 'FAILURE'
 
-def Objective(status):
+def Objective():
     if globals.wire_values[globals.target_line] == 'X':
         if globals.fault_value == '1':
             return (globals.target_line, DB)
@@ -68,6 +68,7 @@ def Objective(status):
 
         # iterate through DF if backtrace gets stuck on gate with no X input
         global n
+        global status
         if status == "TRY_NEXT_DF":
             n += 1
         else: 
