@@ -169,7 +169,16 @@ def simulate(fault_line, fault_value):
 	globals.reset_wire_values()
 	for pi in globals.primary_inputs:
 		globals.wire_values[pi] = test_vector.get(pi, 'X')
-	globals.wire_values[fault_line] = fault_value
+	if fault_line in globals.primary_inputs:
+		pi = globals.wire_values[fault_line]
+		if (pi == '1' and fault_value == "D'") or (pi == '0' and fault_value == 'D'):
+			# fault on PI that matches PI value; no effect
+			pass
+		else:
+			globals.wire_values[fault_line] = fault_value
+	else:
+		globals.wire_values[fault_line] = fault_value
+
 
 	# iterative simulation
 	changed = True
