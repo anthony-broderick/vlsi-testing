@@ -2,7 +2,7 @@
 Take a netlist describing a combinational circuit and perform fault collapsing, list fault classes, simulate the circuit, and generate tests using PODEM.
 
 ## How to run
-Run main.py and follow the prompts listed in the terminal. On run, the following interactive menu will be presented:
+Enter 'make run' in terminal and follow the prompts listed in the terminal. On run, the following interactive menu will be presented:
 
     [0] Read the input net-list
     [1] Perform fault collapsing
