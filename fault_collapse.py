@@ -51,7 +51,7 @@ def collapse_faults_at_gate(Gate):
             # always add input s-a-(c')s
             collapsed_faults.add(f"{inp}: s-a-{Gate.c ^ 1}")
             # use check to add only one input s-a-(c)
-            if not check and Gate.gate_type not in ("or", "nor"):
+            if not check:
                 collapsed_faults.add(f"{inp}: s-a-{Gate.c}")
                 check = True
         if inp in fanout_PI_outputs:
@@ -64,7 +64,7 @@ def collapse_faults_at_gate(Gate):
             collapsed_faults.add(f"{inp}: s-a-{Gate.c ^ 1}")
             collapsed_faults.add(f"{primary_inp}: s-a-{Gate.c ^ 1}")
             # use check to add only one input s-a-(c)
-            if not check and Gate.gate_type not in ("or", "nor"):
+            if not check:
                 collapsed_faults.add(f"{inp}: s-a-{Gate.c}")
                 collapsed_faults.add(f"{primary_inp}: s-a-{Gate.c}")
                 check = True
