@@ -7,6 +7,9 @@ ONE = '1'
 D = 'D'
 DB = "D'"
 
+n = -1
+status = "OK"
+
 def invert_value(val):
     if val == ONE:
         return ZERO
@@ -27,7 +30,7 @@ def PODEM():
 
     # set intial fault line on first run
     # find necessary input to propagate fault
-    k, vk = Objective() 
+    k, vk = Objective(status) 
     if k is None:
         return 'FAILURE'
 
@@ -52,7 +55,7 @@ def PODEM():
 
     return 'FAILURE'
 
-def Objective():
+def Objective(status):
     if globals.wire_values[globals.target_line] == 'X':
         if globals.fault_value == '1':
             return (globals.target_line, DB)
@@ -63,7 +66,19 @@ def Objective():
 
     if D_frontier: # D-frontier not empty
 
-        gate = D_frontier[-1] # select last gate
+        # iterate through DF if backtrace gets stuck on gate with no X input
+        global n
+        if status == "TRY_NEXT_DF":
+            n += 1
+        else: 
+            # status == "OK"
+            n = -1
+        if n == len(D_frontier):
+            # iterated through each DF gate with no success
+            return (None, None)
+        
+
+        gate = D_frontier[n] # select last gate in most cases unless trying next DF
         for inp in gate.inputs:
             if globals.wire_values[inp] == 'X':
                 if gate.c == 0:
@@ -75,9 +90,32 @@ def Objective():
 
 def Backtrace(k, complement):
     v = complement
+    iteration = 0
+    visited = set()
+    global status
+
     while k not in globals.primary_inputs: # k is not PI
+
+        if k in visited:
+            status = "TRY_NEXT_DF"
+            return (None, None)
+            
+        visited.add(k)
+
+        if iteration > (4 * globals.max_recursion_depth):
+            print("Backtrace iteration limit exceeded")
+            return (None, None)
+        iteration += 1
         for gate in globals.gates:
             if k in gate.output:
+
+                # Diagnose Case 1: No X inputs
+                x_inputs = [j for j in gate.inputs if globals.wire_values[j] == 'X']
+                if len(x_inputs) == 0:
+                    status = "TRY_NEXT_DF"
+                    return (None, None)
+
+
                 # handle non PI target_fault
                 if k == globals.target_line:
                     globals.wire_values[k] = D if globals.fault_value == '1' else DB
@@ -88,7 +126,9 @@ def Backtrace(k, complement):
                         v = invert_value(v) if gate.inv == 1 else v
                         k = j
                     if k in globals.primary_inputs:
+                        status = "OK"
                         return (k,v)
+    status = "OK"
     return (k, v) # k is already a PI
 
 def Imply(j,vj): # first call is a PI line (j) and needed value (vj)
